@@ -19,30 +19,19 @@
 #define SEMAPHORE 1
 
 #include "general.h"
-#include "monitor.h"
 
 
 
-
-
-
-
-uint8_t avail[] = {4, 4, 5};
-uint8_t taken[N_PHIL][avail];
-
-
-int get_weights (int philoID) {
+void get_weights (int philoID) {
 	int quantity_2kg = avail[0];
 	int quantity_3kg = avail[1];
 	int quantity_5kg = avail[2];
+	bool while_cond = true;
 
 	pthread_mutex_lock(&mutex);
 	
-	//check if needed weight is available
-	while() {
-		pthread_cond_wait(&cond[philoID], &mutex);
-	}
-	
+	while(while_cond) {
+		while_cond = false;
 	switch(philoID) {
 		case ANNA_ID: //ANNA:6kg
 			if (quantity_3kg >= 2) { //2
@@ -52,6 +41,10 @@ int get_weights (int philoID) {
 			else if (quantity_2kg >= 3) { //3
 				avail[0] = avail[0] - 3;
 				taken[philoID][0] = 3;
+			}
+			else {
+				while_cond = true;
+				pthread_cond_wait(&cond[philoID], &mutex);
 			}
 		break;
 		case BERND_ID: //Bernd:8kg
@@ -70,6 +63,10 @@ int get_weights (int philoID) {
 			else if (quantity_2kg == 4) { //4
 				avail[0] = avail[0] - 4;
 				taken[philoID][0] = 4;
+			}
+			else {
+				while_cond = true;
+				pthread_cond_wait(&cond[philoID], &mutex);
 			}
 		break;
 		case EMMA_ID: //Emma:14kg
@@ -105,6 +102,10 @@ int get_weights (int philoID) {
 				taken[philoID][0] = 4;
 				taken[philoID][1] = 2;
 			}
+			else {
+				while_cond = true;
+				pthread_cond_wait(&cond[philoID], &mutex);
+			}
 		break;
 		default: //Dirk || Clara : 12kg
 			if ((quantity_2kg >= 1) && (quantity_5kg >= 2)) { //3
@@ -131,8 +132,13 @@ int get_weights (int philoID) {
 				taken[philoID][0] = 3;
 				taken[philoID][1] = 2;
 			}
+			else {
+				while_cond = true;
+				pthread_cond_wait(&cond[philoID], &mutex);
+			}
 		break;
-}
+	}
+	}
 	//mark philosopher to workout 
 	philoStates[philoID] = WORKOUT;
 	

@@ -38,6 +38,7 @@
 
 typedef enum {GET_WEIGHTS, WORKOUT, PUT_WEIGHTS, REST} State;
 
+
 //array for keyinput
 char keyinput[KEYCOMBO];
 
@@ -57,23 +58,23 @@ pthread_cond_t cond[N_PHIL];
 sem_t semaphore[N_PHIL];
 
 //philosopher id
-int philoID[N_PHIL] = {ANNA_ID, BERND_ID, CLARA_ID, DIRK_ID, EMMA_ID};
+int philoID[N_PHIL] = {0,1,2,3,4};
 
 //array for philosopher states
 State philoStates[N_PHIL];
 
 //array for thread status
-char status[N_PHIL];
+char status[N_PHIL] = {'n','n','n','n','n'};
 
-
-
+int avail[] = {4, 4, 5};
+int taken[N_PHIL][avail];
 
 
 
 
 
 //function declaration
-void philothread(void *arg);
+void *philothread(void *pID);
 void get_weights(int philoID);
 void workout (int philoID);
 void rest(int philoID);

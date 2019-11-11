@@ -12,13 +12,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <monitor.h>
+#include <assert.h>
+#include <pthread.h>
+#include <semaphore.h>
 #include <stdbool.h>
 #include "general.h"
 
 
 int main (void) {
-	pthread_t philoThreadIds[N_PHIL];
+	pthread_t philoThreadIDs[N_PHIL];
 	int i;
 	int err;
 	int res[N_PHIL];
@@ -35,7 +37,7 @@ int main (void) {
 	
 	//start threads
 	for(i = 0; i < N_PHIL; i++) {
-		res[i] = pthread_create(&philoThreadIDs[i], NULL, 	philo, &philoID[i]);
+		res[i] = pthread_create(&philoThreadIDs[i], NULL, *philothread, &philoID[i]);
 		philoID[i] = i;
 		
 		if(res[i] != 0) {
@@ -69,7 +71,7 @@ int main (void) {
 				c_flag = true;
 				break;
 			default:
-				sprintf("WRONG INPUT!");
+				printf("WRONG INPUT!");
 		}
 		if (q_flag) {
 			printf("Quitting...\n");
@@ -180,6 +182,63 @@ void * philothread(void *pID) {
 			running = 0;
 		}
 	}
+}
+
+int displayStatus(void) {
+	int soll = 45;
+	int ist;
+	int i;
+	
+	for(i=0; i<5; i++) {
+		ist = ist + (2*taken[i][0]) + (3*taken[i][1]) + (5+taken[i][2]);
+	}
+	ist = ist + (2+avail[0]) + (3*avail[1]) + (5*avail[2]);
+
+	if (soll != ist) {
+		printf("WARNING! Gewichte stimmen nicht! WARNING!\n");
+	} else {
+	
+	
+	for (i=0; i<5; i++) {
+		char status_char = status[i];
+		char state_char;
+		int weight_programm;
+		
+		switch (i){
+			case ANNA_ID:
+				weight_programm = 6;
+				break;
+			case BERND_ID:
+				weight_programm = 8;
+				break;
+			case EMMA_ID:
+				weight_programm = 14;
+				break;
+			default:
+				weight_programm = 12;
+				break;
+		}
+		switch(philoStates[i]) {
+			case GET_WEIGHTS:
+				state_char = 'G';
+				break;
+			case WORKOUT:
+				state_char = 'W';
+				break;
+			case PUT_WEIGHTS:
+				state_char = 'P';
+				break;
+			case REST:
+				state_char = 'R';
+				break;
+			default:
+				break;
+		}
+		
+		printf("%d(%d)%c:%c:[%d, %d, %d] ", i, weight_programm, status_char, state_char, taken[i][0], taken[i][1], taken[i][2]);
+	}
+	printf("  Supply: [%d, %d, %d]\n", avail[0], avail[1], avail[2]);
+}
 }
 
 
