@@ -1,14 +1,19 @@
 CC = /usr/bin/gcc
-CFLAGS = -pthread -g -Wall
-LDFLAGS = -lpthread
+CFLAGS = -g -Wall
+LDFLAGS = -g -pthread -Wl,-V
 
-philosopher.o: main.c monitor.c general.h
-							$(CC) -c main.c monitor.c general.h
-							
-OBJ = philosopher.o
+SRC = main.c monitor.c
+OBJ = $(SRC:%.c=%.o)
 
-philosopher: $(OBJ)
-					$(CC) $(CFLAGS) $(LDFLAGS) -o
-					philosopher $(OBJ)
-%.o: %.c
-		$(CC) $(CFLAGS) -c $<
+all: aufgabe2
+
+aufgabe2: $(OBJ)
+			$(CC) -o aufgabe2 $(LDFLAGS) $(OBJ)
+
+.PHONY: deps
+deps:
+		$(CC) -MM $(SRC) > makefile.dependencies
+		
+clean:
+		rm *.o aufgabe2
+include makefile.dependencies

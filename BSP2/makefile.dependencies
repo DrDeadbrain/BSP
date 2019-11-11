@@ -1,0 +1,2 @@
+main.o: main.c general.h
+monitor.o: monitor.c general.h

@@ -10,9 +10,13 @@
  ********************************************************************
  */
 
+
 #ifndef GENERAL_H
 #define GENERAL_H
 
+#include <pthread.h>
+#include <semaphore.h>
+#include <stdint.h>
 #define SUCESS 0
 #define ERROR -1
 
@@ -25,10 +29,8 @@
 
 //loop limits
 #define REST_LOOP 1000000000
-#define WORKOUT_LOOP 500000000
-
-#define RIGHT_NEIGHB(philoID) ((philoID == N_PHIL-1) ? 0 : philoID+1)
-#define LEFT_NEIGHB(philoID) ((philoID == 0)? N_PHIL-1 : philoID-1)
+#define TEST_RL 10
+#define WORKOUT_LOOP 10
 
 #define ANNA_ID 0
 #define BERND_ID 1
@@ -40,34 +42,35 @@ typedef enum {GET_WEIGHTS, WORKOUT, PUT_WEIGHTS, REST} State;
 
 
 //array for keyinput
-char keyinput[KEYCOMBO];
+extern char keyinput[KEYCOMBO];
 
 //array for transmitting b, u, p to philosophers
-char listen[N_PHIL];
+extern char listen[N_PHIL];
 
 //mutex with pthreads
-pthread_mutex_t mutex;
+extern pthread_mutex_t mutex;
 
 //mutex with pthreads for put weights
-pthread_mutex_t mutex_pw;
+extern pthread_mutex_t mutex_pw;
 
 //cond vars with pthreads - one per philosopher
-pthread_cond_t cond[N_PHIL];
+extern pthread_cond_t cond[N_PHIL];
 
 //semaphores one per philosopher
-sem_t semaphore[N_PHIL];
+extern sem_t semaphore[N_PHIL];
 
 //philosopher id
-int philoID[N_PHIL] = {0,1,2,3,4};
+extern unsigned int philoIDs[N_PHIL];
 
 //array for philosopher states
-State philoStates[N_PHIL];
+extern State philoStates[N_PHIL];
 
 //array for thread status
-char status[N_PHIL] = {'n','n','n','n','n'};
+extern char status[N_PHIL];
 
-int avail[] = {4, 4, 5};
-int taken[N_PHIL][avail];
+
+extern unsigned int avail[];
+extern unsigned int taken[5][3];
 
 
 

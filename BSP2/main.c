@@ -18,6 +18,25 @@
 #include <stdbool.h>
 #include "general.h"
 
+//array for thread status
+char status[N_PHIL] = {'n','n','n','n','n'};
+
+//array for philosopher states
+State philoStates[N_PHIL];
+
+unsigned int philoIDs[N_PHIL] = {0,1,2,3,4};
+
+//semaphores one per philosopher
+sem_t semaphore[N_PHIL];
+
+//cond vars with pthreads - one per philosopher
+pthread_cond_t cond[N_PHIL];
+
+//array for keyinput
+char keyinput[KEYCOMBO];
+
+//array for transmitting b, u, p to philosophers
+char listen[N_PHIL];
 
 int main (void) {
 	pthread_t philoThreadIDs[N_PHIL];
@@ -37,8 +56,8 @@ int main (void) {
 	
 	//start threads
 	for(i = 0; i < N_PHIL; i++) {
-		res[i] = pthread_create(&philoThreadIDs[i], NULL, *philothread, &philoID[i]);
-		philoID[i] = i;
+		res[i] = pthread_create(&philoThreadIDs[i], NULL, *philothread, &philoIDs[i]);
+		philoIDs[i] = i;
 		
 		if(res[i] != 0) {
 			perror("Thread cration unsucessful!!!");
@@ -111,16 +130,11 @@ int main (void) {
 					//proceed
 					listen[keyinput[0] - ASCII] = 'p';
 				    sem_post(&semaphore[keyinput[0] - ASCII]);
-					
-
-
 				break;
 			}
 		}
 	}
 	return 0;	
-		
-	
 }
 
 
@@ -146,11 +160,11 @@ void workout (int philoID) {
  * proceeds the rest using a count loop to 
  * defined max val
  */
-void rest (int value) {
+void rest (int philoID) {
 	int count;
-	while (count < REST_LOOP) {
+	while (count < TEST_RL) {
 		if(listen[philoID] == 'b') {
-			sem_wait(semaphore[philoID]);
+			sem_wait(&semaphore[philoID]);
 		}
 		if(listen[philoID] == 'p') {
 			count = WORKOUT_LOOP;
@@ -165,11 +179,11 @@ void rest (int value) {
  * \param pID philosoher ID from thread creation
  * \return nothing
  */
-void * philothread(void *pID) {
+void *philothread(void *pID) {
 	int *philoID = pID;
 	int running = 1; //init
 	
-	printf("Philosophers started.");
+	printf("Philosopher %d just awoke\n", *philoID);
 	
 	while (running) {
 		
@@ -182,9 +196,11 @@ void * philothread(void *pID) {
 			running = 0;
 		}
 	}
+	return 0;
 }
 
 int displayStatus(void) {
+	/**
 	int soll = 45;
 	int ist;
 	int i;
@@ -238,7 +254,10 @@ int displayStatus(void) {
 		printf("%d(%d)%c:%c:[%d, %d, %d] ", i, weight_programm, status_char, state_char, taken[i][0], taken[i][1], taken[i][2]);
 	}
 	printf("  Supply: [%d, %d, %d]\n", avail[0], avail[1], avail[2]);
-}
+	}
+	*/
+	printf("I made it this far YIPPIE!!!!\n");
+	return 0;
 }
 
 

@@ -11,6 +11,7 @@
  */
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <unistd.h>
@@ -20,7 +21,14 @@
 
 #include "general.h"
 
+unsigned int avail[] = {4, 4, 5};
+unsigned int taken[5][3] = {0};
 
+//mutex with pthreads for put weights
+pthread_mutex_t mutex_pw;
+
+//mutex with pthreads
+pthread_mutex_t mutex;
 
 void get_weights (int philoID) {
 	int quantity_2kg = avail[0];
@@ -149,7 +157,7 @@ void get_weights (int philoID) {
 
 
 
-int put_weights(void){
+void put_weights(int philoID){
 	pthread_mutex_lock(&mutex_pw);
 	
 	avail[0] = avail[0] + taken[philoID][0];
@@ -160,9 +168,9 @@ int put_weights(void){
 	taken[philoID][2] = 0;
 	
 	philoStates[philoID] = REST;
-	pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&mutex_pw);
 	
-	for(i = 0; i < N_PHIL; i++) {
+	for(int i = 0; i < N_PHIL; i++) {
 		pthread_cond_signal(&cond[i]);
 	}
 }
