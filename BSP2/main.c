@@ -46,7 +46,7 @@ int main (void) {
 	//keyboard input
 	bool q_flag = false;
 	bool c_flag = false;
-	while(TRUE) {
+	while(!q_flag) {
 		
 		fgets(keyinput, KEYCOMBO, stdin);
 		switch(keyinput[0]) {
@@ -72,7 +72,27 @@ int main (void) {
 				sprintf("WRONG INPUT!");
 		}
 		if (q_flag) {
-			//send end thread message to all philo
+			printf("Quitting...\n");
+			printf("Unblocking all Threads\n");
+			for(i = 0; i < N_PHIL; i++) {
+				listen[i] = 'q';
+				sem_post(&semaphore[keyinput[0] - ASCII]);
+			}
+			for ( i = 0; i < N_PHIL; i++) {
+				printf("Thread %d joined\n", i);
+				pthread_cond_signal(&cond[i]);
+				pthread_join(philoThreadIDs[i], NULL);
+			}
+			printf("Destroy ALL HUMANS!\n");
+			for(i = 0; i < N_PHIL; i++) {
+				pthread_cond_destroy(&cond[i]);
+				sem_destroy(&semaphore[i]);
+			}
+			pthread_mutex_destroy(&mutex);
+			
+			printf("EXITING PROGRAMM!\n");
+			pthread_exit(NULL);
+			exit(EXIT_FAILURE); //programm stops here
 		}
 		else if (c_flag) {
 			switch(keyinput[1]) {
@@ -81,11 +101,17 @@ int main (void) {
 					listen[keyinput[0] - ASCII] = keyinput[1];
 				break;
 				case 'u':
-					sem_post(&semaphore[keyinput[0] - ASCII]);
 					listen[keyinput[0] - ASCII] = 'u';
+					sem_post(&semaphore[keyinput[0] - ASCII]);
+					
 				break;
 				case 'p':
-					//proceed 
+					//proceed
+					listen[keyinput[0] - ASCII] = 'p';
+				    sem_post(&semaphore[keyinput[0] - ASCII]);
+					
+
+
 				break;
 			}
 		}
@@ -107,8 +133,12 @@ void workout (int philoID) {
 		if(listen[philoID] == 'b') {
 			sem_wait(&semaphore[philoID]);
 		}	
+		if(listen[philoID] == 'p') {
+			count = WORKOUT_LOOP;
+		}
 		count++;
 	}
+	philoStates[philoID] = PUT_WEIGHTS;
 }
 /**
  * proceeds the rest using a count loop to 
@@ -120,8 +150,12 @@ void rest (int value) {
 		if(listen[philoID] == 'b') {
 			sem_wait(semaphore[philoID]);
 		}
+		if(listen[philoID] == 'p') {
+			count = WORKOUT_LOOP;
+		}
 		count++;
 	}
+	philoStates[philoID] = GET_WEIGHTS;
 }
 
 /**
@@ -136,12 +170,10 @@ void * philothread(void *pID) {
 	printf("Philosophers started.");
 	
 	while (running) {
-		checkForB(*philoID);
+		
 		rest(*philoID);
-		checkForB(*philoID);
 		get_weights(*philoID);
 		workout(*philoID);
-		checkForB(*philoID);
 		put_weights(*philoID);
 		
 		if(listen[*philoID] == 'q' || listen[*philoID] == 'Q') {
@@ -150,14 +182,7 @@ void * philothread(void *pID) {
 	}
 }
 
-/**
- * help function to check if block command was set
- */
-void checkForB(int philoID) {
-	if(listen[philoID] == 'b') {
-		sem_wait(&semaphore[philoID]);
-	}
-}
+
 
 
 

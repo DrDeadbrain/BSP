@@ -47,6 +47,9 @@ char listen[N_PHIL];
 //mutex with pthreads
 pthread_mutex_t mutex;
 
+//mutex with pthreads for put weights
+pthread_mutex_t mutex_pw;
+
 //cond vars with pthreads - one per philosopher
 pthread_cond_t cond[N_PHIL];
 
