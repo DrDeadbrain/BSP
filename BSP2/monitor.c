@@ -65,16 +65,12 @@ uint8_t avail[] = {4, 4, 5};
 
 //help func to free locked mutex for cond var
 void cleanUpMutex(void *arg) {
-	if( arg == main_mutex_gw) {
 		pthread_mutex_unlock(&main_mutex_gw);
-	}
-	else if (arg == main_mutex_pw) {
-		pthread_mutex_unlock(&main_mutex_pw);
-	}
 }
 
+void* philothread(pthread_mutex_t* philo_m, int *philo_isRunning, int id){}
 
-void* philothread (pthread_mutex_t* philo_m, int *philo_isRunning, int id) {
+void* gw_Monitor(pthread_mutex_t* philo_m, int *philo_isRunning, int id) {
 	while(*philo_isRunning) {
 			pthread_mutex_lock(philo_m); //check if philo is blocked
 			pthread_mutex_unlock(philo_m); //unblock thread
@@ -86,53 +82,24 @@ void* philothread (pthread_mutex_t* philo_m, int *philo_isRunning, int id) {
 					get_weights(id, REST);
 					pthread_mutex_unlock(&main_mutex_pw);
 
-					workout(GET_WEIGHTS);
-
-					sem_wait(&sem_put_weights); //check if put_weights is free
 					pthread_setcancelstate(PTHREAD_CANCEL_DISABLE);
-
-					pthread_mutex_lock(&main_mutex_pw);
-					put_weights(WORKOUT);
-					pthread_mutex_unlock(&main_mutex_pw);
-
 					sem_post(&sem_get_weights);
-					sem_post(&sem_put_weights);
-
-
 				#else
 					pthread_cleanup_push(cleanUpMutex, null);
 					//critical sec
-
 					pthread_mutex_lock(&main_mutex_gw);
+
 					pthread_cond_wait(&cond_gw, &main_mutex_gw); //cond var
 					get_weights(id, REST);
 					pthread_mutex_unlock(&main_mutex_gw);
 
-					workout(GET_WEIGHTS);
-
-					pthread_mutex_lock(&main_mutex_pw);
-					pthread_cond_wait(&cond_pw, &main_mutex_pw); //cond var
-					put_weights
-
-
-
-
-
-
-
-
-
+					pthread_cleanup_pop(0);
 				#endif
-
-
-
-
-
-
-
-
 		}
 }
+
+
+void control()
 
 
 int get_weights (int id, int* value) {
@@ -151,7 +118,7 @@ int get_weights (int id, int* value) {
 				avail[1] = avail[1] - 2;
 			}
 			else {
-				//block thread
+				pthread_mutex_lock(&philo_m_0);
 			}
 		break;
 		case BERND_ID: //Bernd:8kg
@@ -167,7 +134,7 @@ int get_weights (int id, int* value) {
 				avail[1] = avail[1] - 1;
 			}
 			else {
-				//block thread
+				pthread_mutex_lock(philo_m_1);
 			}
 		break;
 		case EMMA_ID: //Emma:
@@ -193,7 +160,7 @@ int get_weights (int id, int* value) {
 				avail[2] = avail[2] - 2;
 			}
 			else {
-				//block thread
+				pthread_mutex_lock(philo_m_4);
 			}
 		break;
 		default: //Dirk || Clara : 12kg
@@ -214,7 +181,12 @@ int get_weights (int id, int* value) {
 				avail[2] = avail[2] - 2;
 			}
 			else {
-				//block thread
+				if (id == CLARA_ID) {
+					pthread_mutex_lock(&philo_m_2);
+				}
+				else if (id == DIRK_ID) {
+					pthread_mutex_lock(&philo_m_3);
+				}
 			}
 		break;
 	}
