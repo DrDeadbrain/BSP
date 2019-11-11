@@ -16,5 +16,6 @@
 typedef enum {GET_WEIGHTS = 0, WORKOUT, PUT_WEIGHTS, REST} State;
 State curr_state = REST;
 
+void* philothread (pthread_mutex_t* philo_m, int *philo_isRunning, int id);
 
 #endif 

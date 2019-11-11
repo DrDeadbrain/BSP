@@ -13,148 +13,106 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <monitor.h>
+#include <stdbool.h>
+#include "general.h"
+
 
 int main (void) {
-	printf("Programm ist gestartet worden\n");
-	fflush(stdout);
+	pthread_t philoThreadIds[N_PHIL];
+	int i;
+	int err;
+	int res[N_PHIL];
 	
-	#ifdef SEMAPHORE
-		sem_init(&sem_get_weights, 0 , 0);
-		sem_init(&sem_put_weights, 0, 0);
-	#endif
 	
-	pthread_t control_t;
-	pthread_t philo_0_t;
-	pthread_t philo_1_t;
-	pthread_t philo_2_t;
-	pthread_t philo_3_t;
-	pthread_t philo_4_t;
+	//init
+	for(i = 0; i < N_PHIL; i++) {
+		philoStates[i] = REST;
+		err = pthread_cond_init(&cond[i], NULL);
+		assert(!err);
+		sem_init(&semaphore[i], 0, 0);
+	}
+	pthread_mutex_init(&mutex, NULL);
 	
-	//startet alle threads
+	//start threads
+	for(i = 0; i < N_PHIL; i++) {
+		res[i] = pthread_create(&philoThreadIDs[i], NULL, 	philo, &philoID[i]);
+		philoID[i] = i;
+		
+		if(res[i] != 0) {
+			perror("Thread cration unsucessful!!!");
+			exit(EXIT_FAILURE);
+		}
+	}
+	//keyboard input
+	bool q_flag = false;
+	bool c_flag = false;
+	while(TRUE) {
+		
+		fgets(keyinput, KEYCOMBO, stdin);
+		switch(keyinput[0]) {
+			case 'q' || 'Q':
+				q_flag = true;
+				break;
+			case '0':
+				c_flag = true;
+				break;
+			case '1':
+				c_flag = true;
+				break;
+			case '2':
+				c_flag = true;
+				break;
+			case '3':
+				c_flag = true;
+				break;
+			case '4':
+				c_flag = true;
+				break;
+			default:
+				sprintf("WRONG INPUT!");
+		}
+		if (q_flag) {
+			//send 
+			
+		
+		
 	
-	if(pthread_create(&control_t, NULL, philothread, NULL)) {
-		printf("Error: Thread can't be started.");
-		fflush(stdout);
-		return -1;
 	}
-	if(pthread_create(&philo_0_t, NULL, philothread, NULL)) {
-		printf("Error: Thread can't be started.");
-		fflush(stdout);
-		return -1;
-	}
-	if(pthread_create(&philo_1_t, NULL, philothread, NULL)) {
-		printf("Error: Thread can't be started.");
-		fflush(stdout);
-		return -1;
-	}
-	if(pthread_create(&philo_2_t, NULL, philothread, NULL)) {
-		printf("Error: Thread can't be started.");
-		fflush(stdout);
-		return -1;
-	}
-	if(pthread_create(&philo_3_t, NULL, philothread, NULL)) {
-		printf("Error: Thread can't be started.");
-		fflush(stdout);
-		return -1;
-	}
-	if(pthread_create(&philo_4_t, NULL, philothread, NULL)) {
-		printf("Error: Thread can't be started.");
-		fflush(stdout);
-		return -1;
-	}
+
+
+/**
+ * proceeds the workout using a count loop
+ * to defined max val
+ */
+void workout (int philoID) {
+	int count;
 	
-	if(pthread_join(control_t, NULL)) {
-		printf("Error: Thread join failed.");
-		fflush(stdout);
-		pthread_cancel(philo_0_t);
-		pthread_cancel(philo_1_t);
-		pthread_cancel(philo_2_t);
-		pthread_cancel(philo_3_t);
-		pthread_cancel(philo_4_t);
-		return -1;
+	while (count < WORKOUT_LOOP) {
+		if(listen[philoID] == 'b') {
+			sem_wait(&semaphore[philoID]);
+		}	
+		count++;
 	}
-	if(pthread_cancel(philo_0_t) != 0) {
-		printf("Error: cancel thread failed");
-		fflush(stdout);
-		return -1;
-	}
-	if(pthread_join(philo_0_t, NULL)) {
-		printf("Error: Thread join failure.");
-		fflush(stdout);
-		return -1;
-	}
-	printf("Thread philo_0 exited\n");
-	fflush(stdout);
-	
-	if(pthread_cancel(philo_1_t) != 0) {
-		printf("Error: cancel thread failed");
-		fflush(stdout);
-		return -1;
-	}
-	if(pthread_join(philo_1_t, NULL)) {
-		printf("Error: Thread join failure.");
-		fflush(stdout);
-		return -1;
-	}
-	printf("Thread philo_0 exited\n");
-	fflush(stdout);
-	
-	if(pthread_cancel(philo_2_t) != 0) {
-		printf("Error: cancel thread failed");
-		fflush(stdout);
-		return -1;
-	}
-	if(pthread_join(philo_2_t, NULL)) {
-		printf("Error: Thread join failure.");
-		fflush(stdout);
-		return -1;
-	}
-	printf("Thread philo_0 exited\n");
-	fflush(stdout);
-	
-	if(pthread_cancel(philo_3_t) != 0) {
-		printf("Error: cancel thread failed");
-		fflush(stdout);
-		return -1;
-	}
-	if(pthread_join(philo_3_t, NULL)) {
-		printf("Error: Thread join failure.");
-		fflush(stdout);
-		return -1;
-	}
-	printf("Thread philo_0 exited\n");
-	fflush(stdout);
-	
-	if(pthread_cancel(philo_4_t) != 0) {
-		printf("Error: cancel thread failed");
-		fflush(stdout);
-		return -1;
-	}
-	if(pthread_join(philo_4_t, NULL)) {
-		printf("Error: Thread join failure.");
-		fflush(stdout);
-		return -1;
-	}
-	printf("Thread philo_0 exited\n");
-	fflush(stdout);
-	
-	#ifdef SEMAPHORE
-		sem_destroy(&sem_get_weights);
-		sem_destroy(&sem_put_weights);
-	#else
-		pthread_cond_destroy(&cond_gw);
-		pthread_cond_destroy(&cond_pw);
-	#endif
-	
-	pthread_mutex_destroy(&main_mutex_gw);
-	pthread_mutex_destroy(&main_mutex_pw);
-	pthread_mutex_destroy(&philo_m_0);
-	pthread_mutex_destroy(&philo_m_1);
-	pthread_mutex_destroy(&philo_m_2);
-	pthread_mutex_destroy(&philo_m_3);
-	pthread_mutex_destroy(&philo_m_4);
-	
 }
+/**
+ * proceeds the rest using a count loop to 
+ * defined max val
+ */
+void rest (int value) {
+	int count;
+	while (count < REST_LOOP) {
+		if(listen[philoID] == 'b') {
+			sem_wait(semaphore[philoID]);
+		}
+		count++;
+	}
+}
+
+void unblock_sem(int philoID) {
+	if(listen[philoID] == 'u' 
+}
+
+
 
 
 
