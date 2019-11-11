@@ -72,12 +72,28 @@ int main (void) {
 				sprintf("WRONG INPUT!");
 		}
 		if (q_flag) {
-			//send 
-			
-		
+			//send end thread message to all philo
+		}
+		else if (c_flag) {
+			switch(keyinput[1]) {
+				case 'b': 
+					//set block in listen array
+					listen[keyinput[0] - ASCII] = keyinput[1];
+				break;
+				case 'u':
+					sem_post(&semaphore[keyinput[0] - ASCII]);
+					listen[keyinput[0] - ASCII] = 'u';
+				break;
+				case 'p':
+					//proceed 
+				break;
+			}
+		}
+	}
+	return 0;	
 		
 	
-	}
+}
 
 
 /**
@@ -108,8 +124,39 @@ void rest (int value) {
 	}
 }
 
-void unblock_sem(int philoID) {
-	if(listen[philoID] == 'u' 
+/**
+ * \brief The main philosopher function
+ * \param pID philosoher ID from thread creation
+ * \return nothing
+ */
+void * philothread(void *pID) {
+	int *philoID = pID;
+	int running = 1; //init
+	
+	printf("Philosophers started.");
+	
+	while (running) {
+		checkForB(*philoID);
+		rest(*philoID);
+		checkForB(*philoID);
+		get_weights(*philoID);
+		workout(*philoID);
+		checkForB(*philoID);
+		put_weights(*philoID);
+		
+		if(listen[*philoID] == 'q' || listen[*philoID] == 'Q') {
+			running = 0;
+		}
+	}
+}
+
+/**
+ * help function to check if block command was set
+ */
+void checkForB(int philoID) {
+	if(listen[philoID] == 'b') {
+		sem_wait(&semaphore[philoID]);
+	}
 }
 
 

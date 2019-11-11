@@ -20,6 +20,9 @@
 
 #define KEYCOMBO 10
 
+//!Helps to cope with ASCII
+#define ASCII 48
+
 //loop limits
 #define REST_LOOP 1000000000
 #define WORKOUT_LOOP 500000000
