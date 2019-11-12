@@ -2,7 +2,7 @@ CC = /usr/bin/gcc
 CFLAGS = -g -Wall
 LDFLAGS = -g -pthread -Wl,-V
 
-SRC = main.c monitor.c
+SRC = main.c monitor.c 
 OBJ = $(SRC:%.c=%.o)
 
 all: aufgabe2

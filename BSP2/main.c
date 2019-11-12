@@ -1,289 +1,217 @@
-/** *****************************************************************
- * @file bsp2/main.c
- * @author Christian Caus (christian.caus@haw-hamburg.de)
- * @author Stefan Subotin (stefan.subotin@haw-hamburg.de)
- * @version 1.0
- * @date 08.11.2019
- * @brief Philosophs Workout
- * Mutexes, Semaphores, cond vars
- * Monitor concept
- ********************************************************************
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
 #include <pthread.h>
-#include <semaphore.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdbool.h>
-#include "general.h"
+#include "main.h"
 
-//array for thread status
-char status[N_PHIL] = {'n','n','n','n','n'};
+/**
+ * vector for semaphores - one for each thread
+ */
+static sem_t semaphore[PHIL_T];
+void *philoThread(void *input_arguments);
+void init();
 
-//array for philosopher states
-State philoStates[N_PHIL];
+static void init_m();
+static int updateState(state_p *state, long *counter_l);
 
-unsigned int philoIDs[N_PHIL] = {0,1,2,3,4};
+/**
+ * thread barrier for creation
+ */
+static pthread_barrier_t create_b;
 
-//semaphores one per philosopher
-sem_t semaphore[N_PHIL];
+/**
+ * Main thread that represents the philosophers
+ */
+void *philoThread(void *input_arguments) {
+	thread_arguments args = *((thread_arguments *)input_arguments);
+	state_p current_State = REST;
+	weights_s weights = EMPTY;
 
-//cond vars with pthreads - one per philosopher
-pthread_cond_t cond[N_PHIL];
+	printf("Name: %s, WEIGHT: %dkg\n\n", args.name, args.weightNeeded);
 
-//array for keyinput
-char keyinput[KEYCOMBO];
+	char keyInp = NO_INPUT;
+	long counter_l = 0;
+	int update = 0;
 
-//array for transmitting b, u, p to philosophers
-char listen[N_PHIL];
-
-int main (void) {
-	pthread_t philoThreadIDs[N_PHIL];
-	int i;
-	int err;
-	int res[N_PHIL];
-	
-	
-	//init
-	for(i = 0; i < N_PHIL; i++) {
-		philoStates[i] = REST;
-		err = pthread_cond_init(&cond[i], NULL);
-		assert(!err);
-		sem_init(&semaphore[i], 0, 0);
+	int val = pthread_barrier_wait(&create_b);
+	if(PTHREAD_BARRIER_SERIAL_THREAD == val) {
+		printf("Main Thread passed barrier!\n");
 	}
-	pthread_mutex_init(&mutex, NULL);
-	
-	//start threads
-	for(i = 0; i < N_PHIL; i++) {
-		res[i] = pthread_create(&philoThreadIDs[i], NULL, *philothread, &philoIDs[i]);
-		philoIDs[i] = i;
-		
-		if(res[i] != 0) {
-			perror("Thread cration unsucessful!!!");
-			exit(EXIT_FAILURE);
+	else if (val == 0) {
+		printf("Barrier passed by thread %d\n", args.ID);
+	}
+
+	while(!(keyInp == 'q')) {
+		//read
+		keyInp = readInput(args.ID);
+		if (keyInp != NO_INPUT) {
+			printf("ID: %d | Input: %c\n", args.ID, keyInp);
+		}
+		//state update
+		if (keyInp == 'p') {
+			printf("Proceed thread, loop finished!\n");
+			counter_l = 0;
+		}
+		else if (keyInp == 'b') {
+			args.status = 'b';
+			printf("Thread blocked!!!\n");
+			displayInfoStatus(thread_info_init(args, current_State, weights));
+			sem_wait(args.semaphore_threadID);
+			args.status = 'n';
+			printf("Thread unblocked!!!\n");
+		}
+		update = updateState(&current_State, &counter_l);
+		if (update != 0) {
+			displayInfoStatus(thread_info_init(args, current_State, weights));
+		}
+		//write
+		if (current_State == WORKOUT || current_State == REST) {
+			counter_l--;
+		}
+		else if (current_State == PUT_WEIGHTS) {
+			put_weights(&weights, thread_info_init(args, current_State, weights));
+		}
+		else if (current_State == GET_WEIGHTS) {
+			get_weights(args.weightNeeded, &weights, thread_info_init(args, current_State, weights));
 		}
 	}
-	//keyboard input
+	args.status = 'q';
+	printf("ID: %d | exited\n", args.ID);
+	pthread_exit(NULL);
+	return NULL;
+}
+
+/**
+ * resṕresents state machine
+ * updates State
+ */
+static int updateState(state_p *state, long *counter_l) {
+	int hasNew = 0;
+	switch (*state) {
+		case WORKOUT:
+				if (*counter_l <= 0) {
+					*state = PUT_WEIGHTS;
+				}
+			break;
+		case PUT_WEIGHTS:
+			*counter_l = REST_LOOP;
+			*state = REST;
+			hasNew = 1;
+			break;
+		case GET_WEIGHTS:
+			*counter_l = WORKOUT_LOOP;
+			*state = WORKOUT;
+			hasNew = 1;
+			break;
+		case REST:
+				if (*counter_l <= 0) {
+					*state = GET_WEIGHTS;
+				}
+			break;
+		default:
+			break;
+	}
+	return hasNew;
+}
+
+/**
+ * Initializes Threads and their semaphores.
+ */
+static void init_m() {
+	pthread_barrier_init(&create_b, NULL, PHIL_T);
+	for (int i = 0; i < PHIL_T; i++) {
+		sem_init(&semaphore[i], SEM_TH, SEM_M);
+	}
+}
+
+/**
+ * parses arguments to arguments vector for thread
+ */
+void *thread_dependencies(void *input_arguments) {
+	thread_arguments args = *((thread_arguments *)input_arguments);
+	printf("Thread: %s | Weight needed: %dkg", args.name, args.weightNeeded);
+	return NULL;
+}
+
+/**
+ * converts State to corresponding output token.
+ */
+char convertForOutput(state_p state) {
+	switch(state) {
+		case WORKOUT:
+				return 'W';
+				break;
+		case REST:
+				return 'R';
+				break;
+		case GET_WEIGHTS:
+				return 'G';
+				break;
+		case PUT_WEIGHTS:
+				return 'G';
+				break;
+		default:
+				return 'X';
+	}
+}
+
+int main(int argv, char *args[]) {
+	pthread_t philoThreads[PHIL_T];
+	thread_arguments input_v[PHIL_T];
+	
+	init_m();
+	initMonitor();
+	
+	input_v[0] = (thread_arguments){.ID = 0, .name = "Anna", .weightNeeded = ANNA_W, 'n', &semaphore[0]};
+	input_v[1] = (thread_arguments){.ID = 1, .name = "Bernd", .weightNeeded = BERND_W, 'n', &semaphore[1]};
+	input_v[2] = (thread_arguments){.ID = 2, .name = "Clara", .weightNeeded = CLARA_W,'n', &semaphore[2]};
+	input_v[3] = (thread_arguments){.ID = 3, .name = "Dirk", .weightNeeded = DIRK_W,'n', &semaphore[3]};
+	input_v[4] = (thread_arguments){.ID = 4, .name = "Emma", .weightNeeded = EMMA_W,'n', &semaphore[4]};
+	
+	for (int i = 0; i < PHIL_T; i++) {
+		int err = pthread_create(&(philoThreads[i]), NULL, &philoThread, &(input_v[i]));
+		if(err != 0) {
+			printf("Error: %d", err);
+			return 1;
+		}
+		
+	}
 	bool q_flag = false;
-	bool c_flag = false;
 	while(!q_flag) {
-		
-		fgets(keyinput, KEYCOMBO, stdin);
-		switch(keyinput[0]) {
-			case 'q' || 'Q':
-				q_flag = true;
-				break;
-			case '0':
-				c_flag = true;
-				break;
-			case '1':
-				c_flag = true;
-				break;
-			case '2':
-				c_flag = true;
-				break;
-			case '3':
-				c_flag = true;
-				break;
-			case '4':
-				c_flag = true;
-				break;
-			default:
-				printf("WRONG INPUT!");
+		char keyInput[KEYMAX];
+		fgets(keyInput, KEYMAX, stdin);
+		if(keyInput[0] == 'q' || keyInput[0] == 'Q') {
+			for(int i = 0; i < PHIL_T; i++) {
+				writeInput(i, 'q');
+			}
+			q_flag = true;
 		}
-		if (q_flag) {
-			printf("Quitting...\n");
-			printf("Unblocking all Threads\n");
-			for(i = 0; i < N_PHIL; i++) {
-				listen[i] = 'q';
-				sem_post(&semaphore[keyinput[0] - ASCII]);
+		else if (keyInput[1] == 'u') {
+			int thread_id = keyInput[0] - '0';
+			if (thread_id < PHIL_T && thread_id >= 0) {
+				printf("Thread Nr. %d unblocked.\n", thread_id);
+				sem_post(&semaphore[thread_id]);
+			} else {
+				printf("Something went wrong. Unknown Thread_ID %d" , thread_id);
 			}
-			for ( i = 0; i < N_PHIL; i++) {
-				printf("Thread %d joined\n", i);
-				pthread_cond_signal(&cond[i]);
-				pthread_join(philoThreadIDs[i], NULL);
-			}
-			printf("Destroy ALL HUMANS!\n");
-			for(i = 0; i < N_PHIL; i++) {
-				pthread_cond_destroy(&cond[i]);
-				sem_destroy(&semaphore[i]);
-			}
-			pthread_mutex_destroy(&mutex);
 			
-			printf("EXITING PROGRAMM!\n");
-			pthread_exit(NULL);
-			exit(EXIT_FAILURE); //programm stops here
 		}
-		else if (c_flag) {
-			switch(keyinput[1]) {
-				case 'b': 
-					//set block in listen array
-					listen[keyinput[0] - ASCII] = keyinput[1];
-				break;
-				case 'u':
-					listen[keyinput[0] - ASCII] = 'u';
-					sem_post(&semaphore[keyinput[0] - ASCII]);
-					
-				break;
-				case 'p':
-					//proceed
-					listen[keyinput[0] - ASCII] = 'p';
-				    sem_post(&semaphore[keyinput[0] - ASCII]);
-				break;
-			}
+		else if ((keyInput[0] >= '0') && ((keyInput[0] - '0') <= PHIL_T)) {
+			int thread_number = keyInput[0] - '0';
+			writeInput(thread_number, keyInput[1]);
+		} else {
+			printf("Unknown Key '%c'\n", keyInput[0]);
 		}
 	}
-	return 0;	
+	printf("Thread joining...\n");
+	pthread_barrier_destroy(&create_b);
+	for (int i = 0; i < PHIL_T; i++) {
+		sem_post(&semaphore[i]);
+		pthread_join(philoThreads[i], NULL);
+		sem_destroy(&semaphore[i]);
+	}
+	monitor_destroy();
+	printf("EXIT PROGRAM...\n");
 }
-
-
-/**
- * proceeds the workout using a count loop
- * to defined max val
- */
-void workout (int philoID) {
-	int count;
-	
-	while (count < WORKOUT_LOOP) {
-		if(listen[philoID] == 'b') {
-			sem_wait(&semaphore[philoID]);
-		}	
-		if(listen[philoID] == 'p') {
-			count = WORKOUT_LOOP;
-		}
-		count++;
-	}
-	philoStates[philoID] = PUT_WEIGHTS;
-}
-/**
- * proceeds the rest using a count loop to 
- * defined max val
- */
-void rest (int philoID) {
-	int count;
-	while (count < TEST_RL) {
-		if(listen[philoID] == 'b') {
-			sem_wait(&semaphore[philoID]);
-		}
-		if(listen[philoID] == 'p') {
-			count = WORKOUT_LOOP;
-		}
-		count++;
-	}
-	philoStates[philoID] = GET_WEIGHTS;
-}
-
-/**
- * \brief The main philosopher function
- * \param pID philosoher ID from thread creation
- * \return nothing
- */
-void *philothread(void *pID) {
-	int *philoID = pID;
-	int running = 1; //init
-	
-	printf("Philosopher %d just awoke\n", *philoID);
-	
-	while (running) {
-		
-		rest(*philoID);
-		get_weights(*philoID);
-		workout(*philoID);
-		put_weights(*philoID);
-		
-		if(listen[*philoID] == 'q' || listen[*philoID] == 'Q') {
-			running = 0;
-		}
-	}
-	return 0;
-}
-
-int displayStatus(void) {
-	/**
-	int soll = 45;
-	int ist;
-	int i;
-	
-	for(i=0; i<5; i++) {
-		ist = ist + (2*taken[i][0]) + (3*taken[i][1]) + (5+taken[i][2]);
-	}
-	ist = ist + (2+avail[0]) + (3*avail[1]) + (5*avail[2]);
-
-	if (soll != ist) {
-		printf("WARNING! Gewichte stimmen nicht! WARNING!\n");
-	} else {
-	
-	
-	for (i=0; i<5; i++) {
-		char status_char = status[i];
-		char state_char;
-		int weight_programm;
-		
-		switch (i){
-			case ANNA_ID:
-				weight_programm = 6;
-				break;
-			case BERND_ID:
-				weight_programm = 8;
-				break;
-			case EMMA_ID:
-				weight_programm = 14;
-				break;
-			default:
-				weight_programm = 12;
-				break;
-		}
-		switch(philoStates[i]) {
-			case GET_WEIGHTS:
-				state_char = 'G';
-				break;
-			case WORKOUT:
-				state_char = 'W';
-				break;
-			case PUT_WEIGHTS:
-				state_char = 'P';
-				break;
-			case REST:
-				state_char = 'R';
-				break;
-			default:
-				break;
-		}
-		
-		printf("%d(%d)%c:%c:[%d, %d, %d] ", i, weight_programm, status_char, state_char, taken[i][0], taken[i][1], taken[i][2]);
-	}
-	printf("  Supply: [%d, %d, %d]\n", avail[0], avail[1], avail[2]);
-	}
-	*/
-	printf("I made it this far YIPPIE!!!!\n");
-	return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
