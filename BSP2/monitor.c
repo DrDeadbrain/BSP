@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "main.h"
+#include "monitor.h"
 
 
 /**
@@ -26,15 +27,7 @@ static weights_s _weight_S = DEFAULT;
  */
 static thread_info threadInfo[PHIL_T];
 
-/**
- * mutex for input in keyPad vector
- */
-static pthread_mutex_t keyPad_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/**
- * input vector for key inputs
- */
-static char KPAD[PHIL_T];
 
 /**
  * destroys all mutexes and cond_vars
@@ -62,32 +55,7 @@ void get_weights(int needed_weights, weights_s *input, thread_info threadInfo) {
 	pthread_mutex_unlock(&mutex);
 }
 
-/**
- * function that reads and returns the input of Keypad
- */
-char readInput(int threadID) {
-	if(!(threadID >= 0 && threadID < PHIL_T)) {
-		printf("Thread ID is invalid!\n");
-	}
-	pthread_mutex_lock(&keyPad_mutex);
-	char output = KPAD[threadID];
-	KPAD[threadID] = NO_INPUT;
-	pthread_mutex_unlock(&keyPad_mutex);
-	return output;
-}
 
-/**
- * function that writes input to keypad -
- * safed by mutex
- */
-void writeInput(int threadID, char value) {
-	if (!(threadID >= 0 && threadID < PHIL_T)) {
-		printf("Thread ID is invalid!\n");
-	}
-	pthread_mutex_lock(&keyPad_mutex);
-	KPAD[threadID] = value;
-	pthread_mutex_unlock(&keyPad_mutex);
-}
 
 /**
  * displays information like seen in bsp2 task
@@ -118,18 +86,7 @@ void displayInfoStatus(thread_info info) {
 	}
 }
 
-/**
- * Initializes the Info Struct for thread
- */
-thread_info thread_info_init(thread_arguments currArgs, state_p currState, weights_s currStack) {
-	thread_info outInfo;
-	outInfo.ID = currArgs.ID;
-	outInfo.status_inf = currArgs.status;
-	outInfo.state = currState;
-	outInfo.weightNeeded = currArgs.weightNeeded;
-	outInfo.wStack = currStack;
-	return outInfo;
-}
+
 
 /**
  * holds the thread on cond var and then parses new thread_info to struct
@@ -159,15 +116,6 @@ void put_weights(weights_s *userWStack, thread_info threadInfo) {
 	pthread_cond_broadcast(&condVar);
 	pthread_mutex_unlock(&mutex);
 }
-
-/**
- *
- */
-/**void logError(int val) {
-	if (val != 0) {
-		printf("errorlog: %d\n\n", val);
-	}
-}*/
 
 /**
  * method that guarantees that needed weights are available

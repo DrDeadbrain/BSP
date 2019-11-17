@@ -3,16 +3,18 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "main.h"
+#include "monitor.h"
 
 /**
  * vector for semaphores - one for each thread
  */
 static sem_t semaphore[PHIL_T];
-void *philoThread(void *input_arguments);
-void init();
 
-static void init_m();
+/**
+ * static function declarations
+ */
 static int updateState(state_p *state, long *counter_l);
+static void init_m();
 
 /**
  * thread barrier for creation
@@ -134,6 +136,19 @@ void *thread_dependencies(void *input_arguments) {
 }
 
 /**
+ * Initializes the Info Struct for thread
+ */
+thread_info thread_info_init(thread_arguments currArgs, state_p currState, weights_s currStack) {
+	thread_info outInfo;
+	outInfo.ID = currArgs.ID;
+	outInfo.status_inf = currArgs.status;
+	outInfo.state = currState;
+	outInfo.weightNeeded = currArgs.weightNeeded;
+	outInfo.wStack = currStack;
+	return outInfo;
+}
+
+/**
  * converts State to corresponding output token.
  */
 char convertForOutput(state_p state) {
@@ -153,6 +168,33 @@ char convertForOutput(state_p state) {
 		default:
 				return 'X';
 	}
+}
+
+/**
+ * function that reads and returns the input of Keypad
+ */
+char readInput(int threadID) {
+	if(!(threadID >= 0 && threadID < PHIL_T)) {
+		printf("Thread ID is invalid!\n");
+	}
+	pthread_mutex_lock(&keyPad_mutex);
+	char output = KPAD[threadID];
+	KPAD[threadID] = NO_INPUT;
+	pthread_mutex_unlock(&keyPad_mutex);
+	return output;
+}
+
+/**
+ * function that writes input to keypad -
+ * safed by mutex
+ */
+void writeInput(int threadID, char value) {
+	if (!(threadID >= 0 && threadID < PHIL_T)) {
+		printf("Thread ID is invalid!\n");
+	}
+	pthread_mutex_lock(&keyPad_mutex);
+	KPAD[threadID] = value;
+	pthread_mutex_unlock(&keyPad_mutex);
 }
 
 int main(int argv, char *args[]) {
@@ -208,6 +250,9 @@ int main(int argv, char *args[]) {
 	for (int i = 0; i < PHIL_T; i++) {
 		sem_post(&semaphore[i]);
 		pthread_join(philoThreads[i], NULL);
+	}
+	for (int i = 0; i < PHIL_T; i++) {
+
 		sem_destroy(&semaphore[i]);
 	}
 	monitor_destroy();

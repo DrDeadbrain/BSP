@@ -62,23 +62,15 @@ typedef struct thread_informations {
 } thread_info;
 
 
-char convertForOutput(state_p state);
+void *philoThread(void *input_arguments);
 void *thread_dependencies(void *);
+thread_info thread_info_init(thread_arguments currArgs, state_p currState, weights_s currStack);
+char convertForOutput(state_p state);
 
 
-
-void monitor_destroy();
-void get_weights(int needed_weights, weights_s *input, thread_info threadInfo);
 char readInput(int threadID);
 void writeInput(int threadID, char value);
-void displayInfoStatus(thread_info info);
-thread_info thread_info_init(thread_arguments currArgs, state_p currState, weights_s currStack);
-void initMonitor();
-void put_weights(weights_s *userWStack, thread_info threadInfo);
-void logError(int val);
 
-int getTotalWeight(weights_s wStack);
-void copyWeight(weights_s *from, weights_s *to);
-bool checkWeight(int totalWeight, weights_s *from, weights_s *to);
+
 
 #endif
