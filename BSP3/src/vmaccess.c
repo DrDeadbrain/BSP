@@ -41,19 +41,22 @@ int ref_c = 0;
 static void vmem_init(void) {
 
     /* Create System V shared memory */
+
 	key_t key;
+
 	key = ftok(SHMKEY, SHMPROCID);
-	TEST_AND_EXIT(key > 0, (stderr, "Didnt got a valid key!"));
+	TEST_AND_EXIT(key > 0, (stderr, "Didnt get a valid key!"));
 
-    /* We are only using the shm, don't set the IPC_CREAT flag */
-	int shm_id = shmget(key, SHMSIZE, 0664);
-	TEST_AND_EXIT(shm_id < 0, (stderr, "Didnt got a valid shared mem id!"));
+	/* We are only using the shm, don't set the IPC_CREAT flag */
+	int shm_id = shmget(key, SHMSIZE, 0666);
+	TEST_AND_EXIT(shm_id < 0, (stderr, "Didnt get a valid shared memory ID!"));
 
-    /* attach shared memory to vmem */
+	/* attach shared memory to vmem */
 	vmem = (struct vmem_struct *) shmat(shm_id, NULL, 0);
 
-	/* Parameter false, because vmappl + vmaccess -> Client */
+	/* Parameter false, da es sich bei dem Modul vmappl + vmaccess um den "Client" handelt. */
 	//setupSyncDataExchange();
+
 }
 
 /**
@@ -71,32 +74,37 @@ static void vmem_init(void) {
  * 
  *  @return     void
  ****************************************************************************************/
-static void vmem_put_page_into_mem(int page_no) {
-	struct msg message = {CMD_PAGEFAULT, page_no, g_count, 0};
+static void vmem_put_page_into_mem(int pageno) {
+	struct msg message = {CMD_PAGEFAULT, pageno, g_count, 0};
 
 	sendMsgToMmanager(message);
+
 }
 
-
 int vmem_read(int address) {
-	TEST_AND_EXIT(address < 0, (stderr, "Calculated false page number!"));
+	TEST_AND_EXIT(address < 0, (stderr, "Got negative address!"));
 
-	if (vmem == NULL) {
-		vmem_init();
+	if(vmem == NULL) {
+	    vmem_init(); 
 	}
-	int page_no = address / VMEM_PAGESIZE;
+
+	int pageno = address / VMEM_PAGESIZE;
 	int offset = address % VMEM_PAGESIZE;
 
-	TEST_AND_EXIT(page_no >= VMEM_NPAGES, (stderr, "Calculated false page number!"));
+	TEST_AND_EXIT(pageno >= VMEM_NPAGES, (stderr, "Calculated false page number!"));
 
-	if ((vmem->pt[page_no].flags & PTF_PRESENT) == 0) {
-		vmem_put_page_into_mem(page_no);
+	if((vmem->pt[pageno].flags & PTF_PRESENT) == 0)
+	{
+		vmem_put_page_into_mem(pageno);
 	}
-	vmem->pt[page_no].flags |= PTF_REF;
 
-	int result = vmem->mainMemory[vmem->pt[page_no].frame * VMEM_PAGESIZE + offset];
+	vmem->pt[pageno].flags |= PTF_REF;
+
+	int result = vmem->mainMemory[vmem->pt[pageno].frame * VMEM_PAGESIZE + offset];
+
 	g_count++;
-	if (g_count % TIME_WINDOW == 0) {
+	if(g_count % TIME_WINDOW == 0)
+	{
 		struct msg message;
 		message.cmd = CMD_TIME_INTER_VAL;
 		message.g_count = g_count;
@@ -106,34 +114,35 @@ int vmem_read(int address) {
 	return result;
 }
 
-
 void vmem_write(int address, int data) {
 	TEST_AND_EXIT(address < 0, (stderr, "Got negative address!"));
 
 	if(vmem == NULL) {
-		vmem_init();
+		vmem_init(); 
 	}
-	int page_no = address / VMEM_PAGESIZE;
-	int offset  = address % VMEM_PAGESIZE;
 
-	TEST_AND_EXIT(page_no >= VMEM_NPAGES, (stderr, "Calculated false page number!"));
+	int pageno = address / VMEM_PAGESIZE;
+	int offset = address % VMEM_PAGESIZE;
 
-	//check if needed page is available in page table
-	if((vmem->pt[page_no].flags & PTF_PRESENT) == 0) {
-		vmem_put_page_into_mem(page_no);
+	TEST_AND_EXIT(pageno >= VMEM_NPAGES, (stderr, "Calculated false page number!"));
+
+	// check if the needed page is available in page table
+	if((vmem->pt[pageno].flags & PTF_PRESENT) == 0)
+	{
+		vmem_put_page_into_mem(pageno);
 	}
 
 	//set R flag
-	vmem->pt[page_no].flags |= PTF_REF;
-	vmem->pt[page_no].flags |= PTF_DIRTY;
+	vmem->pt[pageno].flags |= PTF_REF;
+	vmem->pt[pageno].flags |= PTF_DIRTY;
 
-	//do acutal writing
-	vmem->mainMemory[vmem->pt[page_no].frame * VMEM_PAGESIZE + offset] = data;
-	//vmem->mainMemory[address] = data
-
-	//increment system clock
+	//do actually write
+	vmem->mainMemory[vmem->pt[pageno].frame * VMEM_PAGESIZE + offset] = data;
+	//vmem->mainMemory[address] = data;
+	//increment system clocks
 	g_count++;
-	if (g_count % TIME_WINDOW == 0) {
+	if(g_count % TIME_WINDOW == 0)
+	{
 		struct msg message;
 		message.cmd = CMD_TIME_INTER_VAL;
 		message.g_count = g_count;
