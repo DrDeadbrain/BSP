@@ -26,50 +26,55 @@
 #define INIT_THREAD \
       { .ID = 0, .weightNeeded = 0, .status_inf = '0', .state = REST, .wStack = EMPTY }
 
-typedef enum philoThreadStates {
-      GET_WEIGHTS,
-      WORKOUT,
-      PUT_WEIGHTS,
-      REST
-} state_p;
+typedef enum philoThreadStates
+{
+  GET_WEIGHTS,
+  WORKOUT,
+  PUT_WEIGHTS,
+  REST
+} State_p;
 
 #define DEFAULT \
       { .twoKG = 4, .threeKG = 4, .fiveKG = 5 }
 #define EMPTY \
       { .twoKG = 0, .threeKG = 0, .fiveKG = 0 }
 
-typedef struct weightStack_struct {
-      int twoKG;
-      int threeKG;
-      int fiveKG;
-} weights_s;
+typedef struct weightStack_struct
+{
+  int twoKG;
+  int threeKG;
+  int fiveKG;
+} Weights_s;
 
-typedef struct philoThread_args {
-      int ID;
-      char name[10];
-      int weightNeeded;
-      char status;
-      sem_t *semaphore_threadID;
-      //pthread_barrier_t *barrier;
-} thread_arguments;
+typedef struct philoThread_args
+{
+  int ID;
+  char name[10];
+  int weightNeeded;
+  char status;
+  sem_t *semaphore_threadID;
+  //pthread_barrier_t *barrier;
+} Thread_arguments;
 
-typedef struct thread_informations {
-      int ID;
-      int weightNeeded;
-      char status_inf;
-      state_p state;
-      weights_s wStack;
-} thread_info;
-
-
-void *philoThread(void *input_arguments);
-void *thread_dependencies(void *);
-thread_info thread_info_init(thread_arguments currArgs, state_p currState, weights_s currStack);
-char convertForOutput(state_p state);
+typedef struct thread_informations
+{
+  int ID;
+  int weightNeeded;
+  char status_inf;
+  State_p state;
+  Weights_s wStack;
+} Thread_info;
 
 
-char readInput(int threadID);
-void writeInput(int threadID, char value);
+void *philoThread (void *input_arguments);
+void *thread_dependencies (void *);
+Thread_info thread_info_init (Thread_arguments currArgs, State_p currState,
+			      Weights_s currStack);
+char convertForOutput (State_p state);
+
+
+char readInput (int threadID);
+void writeInput (int threadID, char value);
 
 
 
