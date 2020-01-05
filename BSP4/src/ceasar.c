@@ -397,6 +397,29 @@ fail:
     return result;
 }
 
+void encode(char *input, char *output, int outputSize, int shiftNum) {
+    if (shiftNum < 0) {
+        shiftNum = shiftNum * -1;
+    }
+    int lastIdx = 0;
+    for (int i = 0; (input[i] != '\0') && (i < (outputSize - 1) && (input[i] != '\n')); i++) {
+        char nxtChar = input[i];
+        if ((nxtChar >= 'a') && (nxtChar <= 'z')) {
+            output[i] = ((input[i] - 'a' + shiftNum) % (CHAR_COUNT)) + 'a';
+        } else if ((nxtChar >= 'A') && (nxtChar <= 'Z')) {
+            output[i] = ((input[i] - 'A' + shiftNum) % (CHAR_COUNT)) + 'A';
+        } else {
+            output[i] = input[i];
+        }
+        lastIdx = i;
+    }
+    output[lastIdx + 1] = '\0';
+}
+
+void decode(char *input, char *output, int outputSize, int shiftNum) {
+    encode(input, output, outputSize, CHAR_COUNT - shiftNum);
+}
+
 module_init(ceasar_init_module);
 module_exit(ceasar_cleanup_module);
 
