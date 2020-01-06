@@ -23,7 +23,6 @@
 //#include <asm/uaccess.h>          //copy_*_user
 
 #include "ceasar.h"  /*local def.*/
-#include "ceasarMethods.h"
 
 #define NUMBER_OF_READER 1 //1 in this conf
 #define NUMBER_OF_WRITER 1
@@ -31,7 +30,7 @@
 /**
  * parameters that can be set at load time
  */
-typedef struct buffer_pipe {
+struct buffer_pipe {
     wait_queue_head_t inq, outq;            /*read and write queues*/
     char *buffer, *end;                     /* begin of buf, end of buf */
     int bufferSize;                         /* used in pointer arithmetic */
@@ -40,9 +39,9 @@ typedef struct buffer_pipe {
     struct fasync_struct *async_queue;      /* async reader */
     struct semaphore sem;                   /* mutual exclusion semaphore to ensure that only one can access*/
     struct cdev cdev;                       /* char device struct */
-} BUF_PIPE;
+};
 
-static struct BUF_PIPE *buffer_p;
+static struct buffer_pipe *buffer_p;
 
 static atomic_t reading_slots = ATOMIC_INIT(NUMBER_OF_READER);
 static atomic_t writing_slots = ATOMIC_INIT(NUMBER_OF_WRITER);
@@ -85,7 +84,7 @@ int ceasar_open(struct inode *inode, struct file *filp) {
     if ((filp->f_mode & FMODE_WRITE) && atomic_dec_and_test(&writing_slots)) {
         atomic_inc(&writing_slots);
         PDEBUG("not enough writing slots...");
-        retunr -EBUSY;
+        return -EBUSY;
     }
     dev = container_of(inode->i_cdev, struct ceasar_dev, cdev);
     filp->private_data = dev; //for other methods
@@ -235,7 +234,7 @@ static int buffer_getwritespace(struct buffer_pipe *dev, struct file *filp) {
         DEFINE_WAIT(wait);
 
         up(&dev->sem);
-        if (filp->f_flags & 0_NONBLOCK) {
+        if (filp->f_flags & O_NONBLOCK) {
             return -EAGAIN;
         }
         PDEBUG("\"%s\"writing: going to sleep\n", current->comm);
@@ -378,7 +377,7 @@ int ceasar_init_module(void) {
     init_MUTEX(&buffer_p->sem);
 
     PDEBUG("allocating buffer buffer\n");
-    buffer:p->buffer = kmalloc(CEASAR_P_BUFFER, GFP_KERNEL);
+    buffer_p->buffer = kmalloc(CEASAR_P_BUFFER, GFP_KERNEL);
 
     if (!buffer_p->buffer) {
         //up(&buffer_p->sem)  //?freigeben des semaphores?
@@ -388,7 +387,7 @@ int ceasar_init_module(void) {
     }
     buffer_p->bufferSize = CEASAR_P_BUFFER;
     buffer_p->end = buffer_p->buffer + buffer_p->bufferSize;
-    buffer_p->rp = buffer_p->wp = buffer_p->buffer //rd and wr from beginning
+    buffer_p->rp = buffer_p->wp = buffer_p->buffer; //rd and wr from beginning
 
     return 0; //success
 
@@ -397,7 +396,7 @@ fail:
     return result;
 }
 
-void encode(char *input, char *output, int outputSize, int shiftNum) {
+static void encode(char *input, char *output, int outputSize, int shiftNum) {
     if (shiftNum < 0) {
         shiftNum = shiftNum * -1;
     }
@@ -416,7 +415,7 @@ void encode(char *input, char *output, int outputSize, int shiftNum) {
     output[lastIdx + 1] = '\0';
 }
 
-void decode(char *input, char *output, int outputSize, int shiftNum) {
+static void decode(char *input, char *output, int outputSize, int shiftNum) {
     encode(input, output, outputSize, CHAR_COUNT - shiftNum);
 }
 

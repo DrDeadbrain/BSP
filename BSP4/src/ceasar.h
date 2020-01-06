@@ -69,17 +69,17 @@
 /**
  * representation of ceasar quantum sets
  */
-typedef struct ceasar_qset {
+struct ceasar_qset {
     void **data;
     struct ceasar_qset *next;
-} CEASAR_QSET_STRUCT;
+};
 
-typedef struct ceasar_dev {
-    CEASAR_QSET_STRUCT *data;   /*pointer to first quantum set*/
+struct ceasar_dev {
+    struct ceasar_qset *data;   /*pointer to first quantum set*/
     int quantum;                //current quantum set
     int qset;                   //current array size
     unsigned long size;         //amount of data stored here
-    unsigned int access_key     //used by ceasaruid and ceasarpriv
+    unsigned int access_key;     //used by ceasaruid and ceasarpriv
     struct semaphore sem;       /* mutual exclusion semaphore*/
     struct cdev cdev;           //char dvice structure
 };

@@ -1,24 +1,24 @@
-seed =   2806 page_rep_algo =    FIFO search_algo =    quicksort pagesize =    8 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =    FIFO search_algo =   bubblesort pagesize =    8 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   CLOCK search_algo =    quicksort pagesize =    8 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   CLOCK search_algo =   bubblesort pagesize =    8 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   AGING search_algo =    quicksort pagesize =    8 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   AGING search_algo =   bubblesort pagesize =    8 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =    FIFO search_algo =    quicksort pagesize =   16 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =    FIFO search_algo =   bubblesort pagesize =   16 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   CLOCK search_algo =    quicksort pagesize =   16 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   CLOCK search_algo =   bubblesort pagesize =   16 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   AGING search_algo =    quicksort pagesize =   16 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   AGING search_algo =   bubblesort pagesize =   16 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =    FIFO search_algo =    quicksort pagesize =   32 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =    FIFO search_algo =   bubblesort pagesize =   32 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   CLOCK search_algo =    quicksort pagesize =   32 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   CLOCK search_algo =   bubblesort pagesize =   32 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   AGING search_algo =    quicksort pagesize =   32 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =   AGING search_algo =   bubblesort pagesize =   32 pagefaults       0 global_count     544
-seed =   2806 page_rep_algo =    FIFO search_algo =    quicksort pagesize =   64 pagefaults       0 global_count     512
-seed =   2806 page_rep_algo =    FIFO search_algo =   bubblesort pagesize =   64 pagefaults       0 global_count     512
-seed =   2806 page_rep_algo =   CLOCK search_algo =    quicksort pagesize =   64 pagefaults       0 global_count     512
-seed =   2806 page_rep_algo =   CLOCK search_algo =   bubblesort pagesize =   64 pagefaults       0 global_count     512
-seed =   2806 page_rep_algo =   AGING search_algo =    quicksort pagesize =   64 pagefaults       0 global_count     512
-seed =   2806 page_rep_algo =   AGING search_algo =   bubblesort pagesize =   64 pagefaults       0 global_count     512
+seed =   2806 page_rep_algo =    FIFO search_algo =    quicksort pagesize =    8 pagefaults         global_count        
+seed =   2806 page_rep_algo =    FIFO search_algo =   bubblesort pagesize =    8 pagefaults         global_count        
+seed =   2806 page_rep_algo =   CLOCK search_algo =    quicksort pagesize =    8 pagefaults         global_count        
+seed =   2806 page_rep_algo =   CLOCK search_algo =   bubblesort pagesize =    8 pagefaults         global_count        
+seed =   2806 page_rep_algo =   AGING search_algo =    quicksort pagesize =    8 pagefaults         global_count        
+seed =   2806 page_rep_algo =   AGING search_algo =   bubblesort pagesize =    8 pagefaults         global_count        
+seed =   2806 page_rep_algo =    FIFO search_algo =    quicksort pagesize =   16 pagefaults         global_count        
+seed =   2806 page_rep_algo =    FIFO search_algo =   bubblesort pagesize =   16 pagefaults         global_count        
+seed =   2806 page_rep_algo =   CLOCK search_algo =    quicksort pagesize =   16 pagefaults         global_count        
+seed =   2806 page_rep_algo =   CLOCK search_algo =   bubblesort pagesize =   16 pagefaults         global_count        
+seed =   2806 page_rep_algo =   AGING search_algo =    quicksort pagesize =   16 pagefaults         global_count        
+seed =   2806 page_rep_algo =   AGING search_algo =   bubblesort pagesize =   16 pagefaults         global_count        
+seed =   2806 page_rep_algo =    FIFO search_algo =    quicksort pagesize =   32 pagefaults         global_count        
+seed =   2806 page_rep_algo =    FIFO search_algo =   bubblesort pagesize =   32 pagefaults         global_count        
+seed =   2806 page_rep_algo =   CLOCK search_algo =    quicksort pagesize =   32 pagefaults         global_count        
+seed =   2806 page_rep_algo =   CLOCK search_algo =   bubblesort pagesize =   32 pagefaults         global_count        
+seed =   2806 page_rep_algo =   AGING search_algo =    quicksort pagesize =   32 pagefaults         global_count        
+seed =   2806 page_rep_algo =   AGING search_algo =   bubblesort pagesize =   32 pagefaults         global_count        
+seed =   2806 page_rep_algo =    FIFO search_algo =    quicksort pagesize =   64 pagefaults         global_count        
+seed =   2806 page_rep_algo =    FIFO search_algo =   bubblesort pagesize =   64 pagefaults         global_count        
+seed =   2806 page_rep_algo =   CLOCK search_algo =    quicksort pagesize =   64 pagefaults         global_count        
+seed =   2806 page_rep_algo =   CLOCK search_algo =   bubblesort pagesize =   64 pagefaults         global_count        
+seed =   2806 page_rep_algo =   AGING search_algo =    quicksort pagesize =   64 pagefaults         global_count        
+seed =   2806 page_rep_algo =   AGING search_algo =   bubblesort pagesize =   64 pagefaults         global_count        

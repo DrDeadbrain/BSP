@@ -1,4 +1,4 @@
-DEBFLAGS = -02
+DEBFLAGS = -O2
 ccflags-y := -std=gnu11
 EXTRA_CFLAGS = $(DEBFLAGS)
 EXTRA_CFLAGS += -I$(LDDINC)
@@ -12,12 +12,12 @@ ifneq ($(KERNELRELEASE),)
 
 scull-objs := ceasar.o
 
-obj-m := ceasar.o 
+obj-m := ceasar.o
 
 else
 
 KERNELDIR ?= /lib/modules/$(shell uname -r)/build
-PWD		  := $(shell pwd)
+PWD:=$(shell pwd)
 
 
 

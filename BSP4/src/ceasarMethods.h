@@ -4,4 +4,4 @@
 void encode(char *input, char *output, int outputSize, int shiftNum);
 void decode(char *input, char *output, int outputSize, int shiftNum);
 
-#endif _CEASARMETHODS_H_
+#endif 
