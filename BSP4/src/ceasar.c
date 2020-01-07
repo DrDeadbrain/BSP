@@ -202,6 +202,7 @@ ssize_t ceasar_write(struct file *filp, const char __user *buf, size_t count, lo
     PDEBUG("Going to accept %li bytes to %p from %p\n", (long)count, dev->wp, buf);
 
     char tmp_buffer[count]; //decoding/encoding buffer
+
     if (copy_from_user(tmp_buffer, buf, count)) {
         up(&dev->sem);
         return -EFAULT;
@@ -401,6 +402,7 @@ static void encode(char *input, char *output, int outputSize, int shiftNum) {
         shiftNum = shiftNum * -1;
     }
     int lastIdx = 0;
+
     for (int i = 0; (input[i] != '\0') && (i < (outputSize - 1) && (input[i] != '\n')); i++) {
         char nxtChar = input[i];
         if ((nxtChar >= 'a') && (nxtChar <= 'z')) {
