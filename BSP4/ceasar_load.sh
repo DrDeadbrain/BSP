@@ -5,7 +5,8 @@ mode="664" # -rw-rw-r--
 
 # invoke insmod with all arguments we got
 # and use a pathname, as newer modutils don't look in . by default
-/sbin/insmod ./src/$module.ko $* || exit 1
+
+	/sbin/insmod ./src/$module.ko $* || exit 1
 
 # remove stale nodes
 rm -f /dev/${device}e   # Encode

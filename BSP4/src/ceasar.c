@@ -46,19 +46,17 @@ static atomic_t writing_slots = ATOMIC_INIT(NUMBER_OF_WRITERS);
 int ceasar_major = CEASAR_MAJOR;
 int ceasar_minor = 0;                //? Start minor num for Devices
 int ceasar_nr_devs = CEASAR_NR_DEVS; /* number of bare ceasar devices */
+static int krypto_key = 1;	//Num of shifts für Ceasar
+
+//module_param(ceasar_minor, int, S_IRUGO);
+module_param(krypto_key, int, S_IRUGO);
 
 
-module_param(ceasar_major, int, S_IRUGO);
-module_param(ceasar_minor, int, S_IRUGO);
-module_param(ceasar_nr_devs, int, S_IRUGO);
-
-
-MODULE_AUTHOR("Linus Kurz, Alessandro Rubini, Jonathan Corbet");
+MODULE_AUTHOR("Christian Caus, Stefan Subotin");
 MODULE_LICENSE("Dual BSD/GPL");
 
 struct ceasar_dev *ceasar_devices; /* allocated in ceasar_init_module */
 
-#define KRYPTO_KEY 1 //Num of shifts für Ceasar
 #define USER_INPUT_SIZE 50
 #define CHAR_COUNT ((int)('z' - 'a') + 1) // Number of chars in Alphabet
 
@@ -123,7 +121,10 @@ int ceasar_release(struct inode *inode, struct file *filp) {
 
 ssize_t ceasar_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos) {
         struct buffer_pipe *dev = buffer_p;
-        if (down_interruptible(&dev->sem)) {
+        char tmp_buffer[count]; //Decoding/encoding buffer
+
+
+	if (down_interruptible(&dev->sem)) {
                 return -ERESTARTSYS;
         }
         while (dev->rp == dev->wp) {              /* nothing to read */
@@ -149,9 +150,9 @@ ssize_t ceasar_read(struct file *filp, char __user *buf, size_t count, loff_t *f
                 count = min(count, (size_t)(dev->end - dev->rp));
         }
 
-        char tmp_buffer[count]; //Decoding/encoding buffer
 
-        codingWrapper(filp->private_data, count, tmp_buffer, dev->rp);
+        //codingWrapper(filp->private_data, count, tmp_buffer, dev->rp);
+        encode(dev->rp, tmp_buffer, count, 0); // Ist dafuer da, die Werte ins richtige array zu uebertragen
 
         PDEBUG("Trying to copy to user\n");
         if (copy_to_user(buf, tmp_buffer, count)) { //? Könnte uns auch schlafen legen während wir den Semaphoren haben. Aber in diesem fall gerechtfertig
@@ -174,11 +175,11 @@ ssize_t ceasar_read(struct file *filp, char __user *buf, size_t count, loff_t *f
 static void codingWrapper(struct ceasar_dev *dev, int count, char *bufferTo, char *from) {
         switch (MINOR(dev->cdev.dev)) {
         case 0:
-                encode(from, bufferTo, count, KRYPTO_KEY);
+                encode(from, bufferTo, count, krypto_key);
                 PDEBUG("Encoded [%d] bytes\n", count);
                 break;
         case 1:
-                decode(from, bufferTo, count, KRYPTO_KEY);
+                decode(from, bufferTo, count, krypto_key);
                 PDEBUG("decoded [%d] bytes\n", count);
                 break;
         default:
@@ -188,7 +189,9 @@ static void codingWrapper(struct ceasar_dev *dev, int count, char *bufferTo, cha
 }
 
 ssize_t ceasar_write(struct file *filp, const char __user *buf, size_t count, loff_t *f_pos) {
-        struct buffer_pipe *dev = buffer_p;
+  char tmp_buffer[count]; //Decoding/encoding buffer
+
+  struct buffer_pipe *dev = buffer_p;
         int result;
 
         if (down_interruptible(&dev->sem))
@@ -208,7 +211,6 @@ ssize_t ceasar_write(struct file *filp, const char __user *buf, size_t count, lo
 
         PDEBUG("Going to accept %li bytes to %p from %p\n", (long)count, dev->wp, buf);
 
-        char tmp_buffer[count]; //Decoding/encoding buffer
 
         if (copy_from_user(tmp_buffer, buf, count)) {
                 up(&dev->sem);
