@@ -31,3 +31,4 @@ chgrp $group /dev/${device}d
 # Zugreifbar machen
 chmod $mode  /dev/${device}e    
 chmod $mode  /dev/${device}d
+ 
